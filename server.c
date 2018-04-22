@@ -5,6 +5,7 @@
  *
  */
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+
+void *connection(); /* child thread */
 
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
@@ -23,7 +27,7 @@ int main(int argc, char *argv[]) {
     // Check for proper number of commandline arguments
     // Expect program name in argv[0], port # in argv[1]
     if (argc < 2) {
-        fprintf(stderr,"ERROR, no port provided\n");
+        fprintf(stderr, "ERROR, no port provided\n");
         exit(1);
     }
 
@@ -44,14 +48,25 @@ int main(int argc, char *argv[]) {
 
     printf("I'm Listening\n");
 
-    // Service phase
-    struct sockaddr_in cli_addr;
-    socklen_t clilen = sizeof(cli_addr); // Address struct length
-    int newsockfd = accept(sockfd,
-                           (struct sockaddr *) &cli_addr,
-                           &clilen);
-    if (newsockfd < 0)
-        error("ERROR on accept");
+    while(1) {
+        // Service phase
+        struct sockaddr_in cli_addr;
+        socklen_t clilen = sizeof(cli_addr); // Address struct length
+        int newsockfd = accept(sockfd,
+                               (struct sockaddr *) &cli_addr,
+                               &clilen);
+        if (newsockfd < 0)
+            error("ERROR on accept");
+        else {
+            pthread_t tid; /* the thread identifiers */
+            pthread_create(&tid, NULL, connection, NULL);
+        }
+    }
+
+
+}
+
+void *connection() {
     char buffer[256];
     int comp;
     bzero(buffer, sizeof(buffer));
@@ -78,6 +93,5 @@ int main(int argc, char *argv[]) {
     if (n < 0)
         error("ERROR writing to socket");
     close(newsockfd);
-    close(sockfd);
-    return 0;
+    pthread_exit(0);
 }
