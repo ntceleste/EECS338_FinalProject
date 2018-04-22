@@ -14,17 +14,23 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
 void *connection(void *args); /* client connection manager */
 void *checkout(void *args); /* client checkout */
 void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 
+char inventory[50][50]; /* Inventory list */
+
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
     perror(msg);
     exit(1);
+}
+
+struct clientData {
+  int clientID;
+  char cart[10][50];
 }
 
 int main(int argc, char *argv[]) {
@@ -71,14 +77,16 @@ int main(int argc, char *argv[]) {
 }
 
 void *connection(void *args) {
-    int newsockfd = args;
+    struct clientData client;
+    client.clientID = args;
     char buffer[256];
+    char clientCart[50][10]; /* Stores the items in the clients cart */
     int comp;
     bzero(buffer, sizeof(buffer));
     sprintf(buffer, "How many steps does it take for a client to change a light bulb? \n> ");
-    int n = write(newsockfd, buffer, sizeof(buffer));
+    int n = write(client.clientID, buffer, sizeof(buffer));
     bzero(buffer, sizeof(buffer));
-    n = read(newsockfd, buffer, sizeof(buffer));
+    n = read(client.clientID, buffer, sizeof(buffer));
     if (n < 0)
         error("ERROR reading from socket");
 
@@ -94,7 +102,7 @@ void *connection(void *args) {
     }
 
 
-    n = write(newsockfd, buffer, sizeof(buffer));
+    n = write(client.clientID, buffer, sizeof(buffer));
     if (n < 0)
         error("ERROR writing to socket");
     close(newsockfd);
