@@ -20,8 +20,6 @@ void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 
-char inventory[50][50]; /* Inventory list */
-
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
     perror(msg);
