@@ -103,20 +103,24 @@ void *connection(void *args) {
 
 void *checkout(void *args) {
   int newsockfd = args;
+  char buffer[256];
   sprintf(buffer, "CHECKOUT");
 }
 
 void *cart(void *args) {
   int newsockfd = args;
+  char buffer[256];
   sprintf(buffer, "CART");
 }
 
 void *sell(void *args) {
   int newsockfd = args;
+  char buffer[256];
   sprintf(buffer, "SELL");
 }
 
 void *shop(void *args) {
   int newsockfd = args;
+  char buffer[256];
   sprintf(buffer, "SHOP");
 }
