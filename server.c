@@ -15,7 +15,11 @@
 #include <netinet/in.h>
 
 
-void *connection(); /* child thread */
+void *connection(void *args); /* client connection manager */
+void *checkout(void *args); /* client checkout */
+void *sell(void *args); /* client sells */
+void *shop(void *args); /* client shops stores inventory */
+void *cart(void *args); /* client checks their cart */
 
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
@@ -95,4 +99,24 @@ void *connection(void *args) {
         error("ERROR writing to socket");
     close(newsockfd);
     pthread_exit(0);
+}
+
+void *checkout(void *args) {
+  int newsockfd = args;
+  sprintf(buffer, "CHECKOUT");
+}
+
+void *cart(void *args) {
+  int newsockfd = args;
+  sprintf(buffer, "CART");
+}
+
+void *sell(void *args) {
+  int newsockfd = args;
+  sprintf(buffer, "SELL");
+}
+
+void *shop(void *args) {
+  int newsockfd = args;
+  sprintf(buffer, "SHOP");
 }
