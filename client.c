@@ -1,8 +1,8 @@
 /**
  * Nate Celeste - NTC14
- * EECS 338 - HW5, Problem 1, client
+ * Clancy Mitchell - CCM81
+ * EECS 338 - Final Project Client Side
  *
- * Based on the client program provided by the prof.
  */
 
 #include <stdio.h>

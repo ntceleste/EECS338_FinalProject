@@ -1,8 +1,8 @@
 /**
  * Nate Celeste - NTC14
- * EECS 338 - HW5, Problem 1, Server
+ * Clancy Mitchell - CCM81
+ * EECS 338 - Final Project Server Side
  *
- * Based on the server program provided by the prof.
  */
 
 #include <stdio.h>
