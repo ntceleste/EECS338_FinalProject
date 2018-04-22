@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <semaphore.h>
 
 void *connection(void *args); /* client connection manager */
 void *checkout(void *args); /* client checkout */
@@ -20,11 +21,15 @@ void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 
+sem_t inventory; 
+
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
     perror(msg);
     exit(1);
 }
+
+char storeInventory[50][50]; /* keep s the storefront's inventory */
 
 struct clientData {
   int clientID;
