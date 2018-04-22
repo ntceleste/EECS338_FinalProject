@@ -59,14 +59,15 @@ int main(int argc, char *argv[]) {
             error("ERROR on accept");
         else {
             pthread_t tid; /* the thread identifiers */
-            pthread_create(&tid, NULL, connection, NULL);
+            pthread_create(&tid, NULL, connection, newsockfd);
         }
     }
 
 
 }
 
-void *connection() {
+void *connection(void *args) {
+    int newsockfd = args;
     char buffer[256];
     int comp;
     bzero(buffer, sizeof(buffer));
