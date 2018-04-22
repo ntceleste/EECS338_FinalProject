@@ -78,7 +78,6 @@ void *connection(void *args) {
     struct clientData client;
     client.clientID = args;
     char buffer[256];
-    char clientCart[50][10]; /* Stores the items in the clients cart */
     int comp;
     bzero(buffer, sizeof(buffer));
     sprintf(buffer, "How many steps does it take for a client to change a light bulb? \n> ");
