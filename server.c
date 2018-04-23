@@ -21,6 +21,7 @@ void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 void *addMoney(void *args); /* for admin use only, adds money to user accounts */
+void *checkAccount(void *args); /* returns the ammount of money in a clients account */
 
 sem_t inventory;
 
@@ -143,5 +144,11 @@ void *shop(void *args) {
 void *addMoney(void *args) {
   int newsockfd = args;
   char buffer[256];
-  sprintf(buffer, "Money TEST");
+  sprintf(buffer, "MONEY TEST");
+}
+
+void *checkAccount(void *args) {
+  int newsockfd = args;
+  char buffer[256];
+  sprintf(buffer, "ACCOUNT AMMOUNT TEST");
 }
