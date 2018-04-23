@@ -20,8 +20,9 @@ void *checkout(void *args); /* client checkout */
 void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
+void *addMoney(void *args); /* for admin use only, adds money to user accounts */
 
-sem_t inventory; 
+sem_t inventory;
 
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
@@ -30,10 +31,13 @@ void error(const char *msg) {
 }
 
 char storeInventory[50][50]; /* keep s the storefront's inventory */
+int storeStock[50]; /* matches the items above and keeps track of item stock numbers */
+int storeAccount = 9999; /* Keeps track of the stores money */
 
 struct clientData {
   int clientID;
   char cart[10][50];
+  int clientAccount;
 }
 
 int main(int argc, char *argv[]) {
@@ -133,4 +137,10 @@ void *shop(void *args) {
   int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "SHOP TEST");
+}
+
+void *addMoney(void *args) {
+  int newsockfd = args;
+  char buffer[256];
+  sprintf(buffer, "Money TEST");
 }
