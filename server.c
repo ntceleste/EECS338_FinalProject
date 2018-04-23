@@ -37,9 +37,9 @@ int storePrice[50]; /* matches the items above and keeps track of the item price
 int storeAccount = 9999; /* Keeps track of the stores money */
 
 struct clientData {
-  int clientID;
-  char cart[10][50];
-  int clientAccount;
+  int clientID; /* keeps track of the clients login ID, this is unique to each client connection */
+  char cart[10][50]; /* holds the items added to the clients cart  */
+  int clientAccount; /* holds the ammount of money in the clients cart */
 };
 
 int main(int argc, char *argv[]) {
