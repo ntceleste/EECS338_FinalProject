@@ -32,7 +32,7 @@ void error(const char *msg) {
 
 char storeInventory[50][50]; /* keep s the storefront's inventory */
 int storeStock[50]; /* matches the items above and keeps track of item stock numbers */
-int storePrice[50]; /* matches the items above and keeps track of the item prices */ 
+int storePrice[50]; /* matches the items above and keeps track of the item prices */ s
 int storeAccount = 9999; /* Keeps track of the stores money */
 
 struct clientData {
