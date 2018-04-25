@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
     if (connect(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR connecting");
 
-
     int runFlag = 1;
     char buffer[256];
     while(runFlag){

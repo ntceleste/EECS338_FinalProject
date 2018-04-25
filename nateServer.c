@@ -13,15 +13,34 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <semaphore.h>
 
+void *connection(void *args); /* client connection manager */
+void *checkout(void *args); /* client checkout */
+void *sell(void *args); /* client sells */
+void *shop(void *args); /* client shops stores inventory */
+void *cart(void *args); /* client checks their cart */
+void *addMoney(void *args); /* for admin use only, adds money to user accounts */
+void *checkAccount(void *args); /* returns the ammount of money in a clients account */
 
-void *connection(); /* child thread */
+sem_t inventory;
 
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
     perror(msg);
     exit(1);
 }
+
+char storeInventory[50][50]; /* keep s the storefront's inventory */
+int storeStock[50]; /* matches the items above and keeps track of item stock numbers */
+int storePrice[50]; /* matches the items above and keeps track of the item prices */
+int storeAccount = 9999; /* Keeps track of the stores money */
+
+struct clientData {
+    int clientID; /* keeps track of the clients login ID, this is unique to each client connection */
+    char cart[10][50]; /* holds the items added to the clients cart  */
+    int clientAccount; /* holds the ammount of money in the clients cart */
+};
 
 int main(int argc, char *argv[]) {
     // Check for proper number of commandline arguments
@@ -63,19 +82,21 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
 }
 
 void *connection(void *args) {
-    int newsockfd = args;
+    struct clientData client;
+    client.clientID = args;
     char buffer[256];
     int comp;
     int runFlag = 1;
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
         sprintf(buffer, "Say something >");
-        int n = write(newsockfd, buffer, sizeof(buffer));
+        int n = write(client.clientID, buffer, sizeof(buffer));
         bzero(buffer, sizeof(buffer));
-        n = read(newsockfd, buffer, sizeof(buffer));
+        n = read(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
             error("ERROR reading from socket");
 
@@ -86,10 +107,46 @@ void *connection(void *args) {
             printf("Received %s and Replied\n", buffer);
             runFlag = 0;
         }
-        n = write(newsockfd, buffer, sizeof(buffer));
+        n = write(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
             error("ERROR writing to socket");
     }
-    close(newsockfd);
+    close(client.clientID);
     pthread_exit(0);
+}
+
+void *checkout(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "CHECKOUT TEST");
+}
+
+void *cart(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "CART TEST");
+}
+
+void *sell(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "SELL TEST");
+}
+
+void *shop(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "SHOP TEST");
+}
+
+void *addMoney(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "MONEY TEST");
+}
+
+void *checkAccount(void *args) {
+    int newsockfd = args;
+    char buffer[256];
+    sprintf(buffer, "ACCOUNT AMMOUNT TEST");
 }
