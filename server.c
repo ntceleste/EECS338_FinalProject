@@ -93,7 +93,7 @@ void *connection(void *args) {
     int runFlag = 1;
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
-        sprintf(buffer, "Say something >");
+        sprintf(buffer, "What would you like to do?");
         int n = write(client.clientID, buffer, sizeof(buffer));
         bzero(buffer, sizeof(buffer));
         n = read(client.clientID, buffer, sizeof(buffer));
@@ -106,6 +106,11 @@ void *connection(void *args) {
             sprintf(buffer, "goodbye.\n");
             printf("Received %s and Replied\n", buffer);
             runFlag = 0;
+        } else if (strcmp(buffer, "shop\n") == 0) {
+            printf("Received %s and Replied\n", buffer);
+            pthread_t tid; /* the thread identifiers */
+            pthread_create(&tid, NULL, shop, &client);
+            pthread_join(tid, NULL);
         }
         n = write(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
@@ -116,37 +121,58 @@ void *connection(void *args) {
 }
 
 void *checkout(void *args) {
-  int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "CHECKOUT TEST");
 }
 
 void *cart(void *args) {
-  int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "CART TEST");
 }
 
 void *sell(void *args) {
-  int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "SELL TEST");
 }
 
 void *shop(void *args) {
-  int newsockfd = args;
-  char buffer[256];
+    struct clientData *client;
+    client = (struct clientData*) args;
+    char buffer[256];
+    int comp;
+    int runFlag = 1;
+    while(runFlag) {
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "Inventory would go here");
+        int n = write(client->clientID, buffer, sizeof(buffer));
+        printf("Wrote");
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        printf("Read");
+        if (n < 0)
+            error("ERROR reading from socket");
+
+
+        if (strcmp(buffer, "exit shop\n") == 0) {
+            printf("Received %s and Replied\n", buffer);
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        }
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0)
+            error("ERROR writing to socket");
+    }
+    close(client->clientID);
+    pthread_exit(0);
   sprintf(buffer, "SHOP TEST");
 }
 
 void *addMoney(void *args) {
-  int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "MONEY TEST");
 }
 
 void *checkAccount(void *args) {
-  int newsockfd = args;
   char buffer[256];
   sprintf(buffer, "ACCOUNT AMMOUNT TEST");
 }
