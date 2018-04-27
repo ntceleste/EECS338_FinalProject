@@ -77,12 +77,12 @@ int main(int argc, char *argv[]) {
         if (newsockfd < 0)
             error("ERROR on accept");
         else {
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
             pthread_t tid; /* the thread identifiers */
-            pthread_create(&tid, NULL, connection, newsockfd);
+            pthread_create(&tid, &attr, connection, newsockfd);
         }
     }
-
-
 }
 
 void *connection(void *args) {
@@ -93,7 +93,7 @@ void *connection(void *args) {
     int runFlag = 1;
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
-        sprintf(buffer, "Say something >");
+        sprintf(buffer, "What would you like to do?");
         int n = write(client.clientID, buffer, sizeof(buffer));
         bzero(buffer, sizeof(buffer));
         n = read(client.clientID, buffer, sizeof(buffer));
@@ -104,8 +104,17 @@ void *connection(void *args) {
         if (strcmp(buffer, "exit\n") == 0) {
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "goodbye.\n");
-            printf("Received %s and Replied\n", buffer);
             runFlag = 0;
+        } else if (strcmp(buffer, "shop\n") == 0) {
+            printf("Received '%s' and Replied\n", buffer);
+            pthread_t tid; /* the thread identifiers */
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, shop, &client);
+            printf("waiting to join\n");
+            printf("ConnectionID: %d\n", client.clientID);
+            pthread_join(tid, NULL);
+            printf("rejoined thread\n");
         }
         n = write(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
@@ -116,37 +125,77 @@ void *connection(void *args) {
 }
 
 void *checkout(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
     sprintf(buffer, "CHECKOUT TEST");
 }
 
 void *cart(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
     sprintf(buffer, "CART TEST");
 }
 
 void *sell(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
     sprintf(buffer, "SELL TEST");
 }
 
 void *shop(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
-    sprintf(buffer, "SHOP TEST");
+    int comp;
+    int runFlag = 1;
+
+    printf("Entered Shop Thread\n");
+    printf("shopID: %d\n", client->clientID);
+    while(runFlag) {
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "INVENTORY");
+        int n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: Shop 1");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "What do you want to buy?");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: Shop 2");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        printf("reading from the buffer\n");
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: Shop 1");
+        }
+        if (strcmp(buffer, "exit shop\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        }
+
+    }
+    pthread_exit(0);
 }
 
+
+//Should the only way to add money be to sell stuff? I think that makes sense, and simplifies life...
 void *addMoney(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
     sprintf(buffer, "MONEY TEST");
 }
 
 void *checkAccount(void *args) {
-    int newsockfd = args;
+    struct clientData *client;
+    client = (struct clientData*) args;
     char buffer[256];
     sprintf(buffer, "ACCOUNT AMMOUNT TEST");
 }

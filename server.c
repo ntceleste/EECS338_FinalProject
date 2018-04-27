@@ -77,12 +77,12 @@ int main(int argc, char *argv[]) {
         if (newsockfd < 0)
             error("ERROR on accept");
         else {
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
             pthread_t tid; /* the thread identifiers */
-            pthread_create(&tid, NULL, connection, newsockfd);
+            pthread_create(&tid, &attr, connection, newsockfd);
         }
     }
-
-
 }
 
 void *connection(void *args) {
@@ -104,13 +104,16 @@ void *connection(void *args) {
         if (strcmp(buffer, "exit\n") == 0) {
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "goodbye.\n");
-            printf("Received %s and Replied\n", buffer);
             runFlag = 0;
         } else if (strcmp(buffer, "shop\n") == 0) {
-            printf("Received %s and Replied\n", buffer);
+            printf("Received '%s' and Replied\n", buffer);
             pthread_t tid; /* the thread identifiers */
-            pthread_create(&tid, NULL, shop, &client);
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, shop, &client);
+            printf("waiting to join");
             pthread_join(tid, NULL);
+            printf("rejoined thread");
         }
         n = write(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
@@ -121,16 +124,22 @@ void *connection(void *args) {
 }
 
 void *checkout(void *args) {
+    struct clientData *client;
+    client = (struct clientData*) args;
   char buffer[256];
   sprintf(buffer, "CHECKOUT TEST");
 }
 
 void *cart(void *args) {
+    struct clientData *client;
+    client = (struct clientData*) args;
   char buffer[256];
   sprintf(buffer, "CART TEST");
 }
 
 void *sell(void *args) {
+    struct clientData *client;
+    client = (struct clientData*) args;
   char buffer[256];
   sprintf(buffer, "SELL TEST");
 }
@@ -138,13 +147,18 @@ void *sell(void *args) {
 void *shop(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
+    printf("Entered Shop Thread");
     char buffer[256];
     int comp;
     int runFlag = 1;
+
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
         sprintf(buffer, "Inventory would go here");
+        printf("Wrote into buffer");
         int n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0)
+            error("ERROR writing to socket");
         printf("Wrote");
         bzero(buffer, sizeof(buffer));
         n = read(client->clientID, buffer, sizeof(buffer));
@@ -162,17 +176,22 @@ void *shop(void *args) {
         if (n < 0)
             error("ERROR writing to socket");
     }
-    close(client->clientID);
     pthread_exit(0);
   sprintf(buffer, "SHOP TEST");
 }
 
+
+//Should the only way to add money be to sell stuff? I think that makes sense, and simplifies life...
 void *addMoney(void *args) {
-  char buffer[256];
-  sprintf(buffer, "MONEY TEST");
+    struct clientData *client;
+    client = (struct clientData*) args;
+    char buffer[256];
+    sprintf(buffer, "MONEY TEST");
 }
 
 void *checkAccount(void *args) {
-  char buffer[256];
-  sprintf(buffer, "ACCOUNT AMMOUNT TEST");
+    struct clientData *client;
+    client = (struct clientData*) args;
+    char buffer[256];
+    sprintf(buffer, "ACCOUNT AMMOUNT TEST");
 }

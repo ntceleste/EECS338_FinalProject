@@ -55,20 +55,20 @@ int main(int argc, char *argv[]) {
     while(runFlag){
         bzero(buffer, sizeof(buffer));
         int n = read(sockfd, buffer, sizeof(buffer));
-        if(strcmp(buffer, "goodbye.\n") == 0){
-            printf("%s", buffer);
-            runFlag = 0;
-        } else {
-            printf("%s\n", buffer);
-            bzero(buffer, sizeof(buffer));
-            fgets(buffer, sizeof(buffer), stdin);
-            n = write(sockfd, buffer, sizeof(buffer));
-            if (n < 0)
-                error("ERROR writing to socket");
-        }
+        printf("%s\n", buffer);
+        bzero(buffer, sizeof(buffer));
+        fgets(buffer, sizeof(buffer), stdin);
+        n = write(sockfd, buffer, sizeof(buffer));
+
+        if (n < 0)
+            error("ERROR writing to socket");
         bzero(buffer, sizeof(buffer));
         n = read(sockfd, buffer, sizeof(buffer));
+        if(strcmp(buffer, "goodbye.\n") == 0){
+            runFlag = 0;
+        }
         printf("%s\n", buffer);
+
     }
 
     close(sockfd);
