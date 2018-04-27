@@ -22,6 +22,7 @@ void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 void *addMoney(void *args); /* for admin use only, adds money to user accounts */
 void *checkAccount(void *args); /* returns the amount of money in a clients account */
+char printCart(struct clientData client);
 
 sem_t inventory;
 
@@ -202,27 +203,7 @@ void *cart(void *args) {
             runFlag = 0;
         } else if (strcmp(buffer, "check cart\n") == 0) {
             bzero(buffer, sizeof(buffer));
-            sprintf(buffer, "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n",
-                    client->cart[0],
-                    client->cart[1],
-                    client->cart[2],
-                    client->cart[3],
-                    client->cart[4],
-                    client->cart[5],
-                    client->cart[6],
-                    client->cart[7],
-                    client->cart[8],
-                    client->cart[9]);
-
+            sprintf(buffer, printCart(client));
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
                 error("ERROR writing to socket: cart 2");
@@ -352,3 +333,14 @@ void *checkAccount(void *args) {
     printf("Account Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
 }
+
+char printCart(struct clientData client){
+    char* cart;
+    int i;
+    for(i = 0; i < 10; i++) {
+        strcat(cart, client.cart[i]);
+        strcat(cart, "\n");
+    };
+    return cart;
+}
+
