@@ -249,7 +249,12 @@ void *cart(void *args) {
                 error("ERROR reading from socket: cart 2");
             }
 
-            //REMOVE FROM CART
+            int i;
+            for(i = 0; i < 10; i++){
+                if(strcmp(strcat(client->cart[i], "\n"), buffer) == 0){
+                    strcpy(client->cart[i], "empty");
+                }
+            }
 
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "We've removed the requested Item.\n");
