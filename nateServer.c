@@ -80,14 +80,15 @@ int main(int argc, char *argv[]) {
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_t tid; /* the thread identifiers */
-            pthread_create(&tid, &attr, connection, newsockfd);
+            pthread_create(&tid, &attr, connection, &newsockfd);
         }
     }
 }
 
 void *connection(void *args) {
     struct clientData client;
-    client.clientID = args;
+    client.clientID =  *(int*)args;
+    printf("Connection Opened - ClientID: %d\n", client.clientID);
     char buffer[256];
     int comp;
     int runFlag = 1;
@@ -106,21 +107,45 @@ void *connection(void *args) {
             sprintf(buffer, "goodbye.\n");
             runFlag = 0;
         } else if (strcmp(buffer, "shop\n") == 0) {
-            printf("Received '%s' and Replied\n", buffer);
             pthread_t tid; /* the thread identifiers */
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, shop, &client);
-            printf("waiting to join\n");
-            printf("ConnectionID: %d\n", client.clientID);
             pthread_join(tid, NULL);
-            printf("rejoined thread\n");
+        } else if (strcmp(buffer, "sell\n") == 0) {
+            pthread_t tid; /* the thread identifiers */
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, sell, &client);
+            pthread_join(tid, NULL);
+        } else if (strcmp(buffer, "cart\n") == 0) {
+            pthread_t tid; /* the thread identifiers */
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, cart, &client);
+            pthread_join(tid, NULL);
+        } else if (strcmp(buffer, "checkout\n") == 0) {
+            pthread_t tid; /* the thread identifiers */
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, checkout, &client);
+            pthread_join(tid, NULL);
+        } else if (strcmp(buffer, "check account\n") == 0) {
+            pthread_t tid; /* the thread identifiers */
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tid, &attr, checkAccount, &client);
+            pthread_join(tid, NULL);
+        } else {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "please enter a valid command.\n");
         }
         n = write(client.clientID, buffer, sizeof(buffer));
         if (n < 0)
             error("ERROR writing to socket");
     }
     close(client.clientID);
+    printf("Connection Closed - ClientID: %d\n", client.clientID);
     pthread_exit(0);
 }
 
@@ -128,21 +153,39 @@ void *checkout(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
     char buffer[256];
-    sprintf(buffer, "CHECKOUT TEST");
+    int comp;
+    int runFlag = 1;
+
+    printf("Checkout Entered - ClientID: %d\n", client->clientID);
+
+    printf("Checkout Exited - ClientID: %d\n", client->clientID);
+    pthread_exit(0);
 }
 
 void *cart(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
     char buffer[256];
-    sprintf(buffer, "CART TEST");
+    int comp;
+    int runFlag = 1;
+
+    printf("Cart Entered - ClientID: %d\n", client->clientID);
+
+    printf("Cart Exited - ClientID: %d\n", client->clientID);
+    pthread_exit(0);
 }
 
 void *sell(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
     char buffer[256];
-    sprintf(buffer, "SELL TEST");
+    int comp;
+    int runFlag = 1;
+
+    printf("Sell Entered - ClientID: %d\n", client->clientID);
+
+    printf("Sell Exited - ClientID: %d\n", client->clientID);
+    pthread_exit(0);
 }
 
 void *shop(void *args) {
@@ -152,8 +195,7 @@ void *shop(void *args) {
     int comp;
     int runFlag = 1;
 
-    printf("Entered Shop Thread\n");
-    printf("shopID: %d\n", client->clientID);
+    printf("Shop Entered - ClientID: %d\n", client->clientID);
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
         sprintf(buffer, "INVENTORY");
@@ -170,7 +212,6 @@ void *shop(void *args) {
         }
 
         bzero(buffer, sizeof(buffer));
-        printf("reading from the buffer\n");
         n = read(client->clientID, buffer, sizeof(buffer));
         if (n < 0){
             error("ERROR reading from socket: Shop 1");
@@ -181,6 +222,7 @@ void *shop(void *args) {
         }
 
     }
+    printf("Shop Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
 }
 
@@ -197,5 +239,11 @@ void *checkAccount(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
     char buffer[256];
-    sprintf(buffer, "ACCOUNT AMMOUNT TEST");
+    int comp;
+    int runFlag = 1;
+
+    printf("Account Entered - ClientID: %d\n", client->clientID);
+
+    printf("Account Exited - ClientID: %d\n", client->clientID);
+    pthread_exit(0);
 }
