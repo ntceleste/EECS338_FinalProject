@@ -86,8 +86,13 @@ int main(int argc, char *argv[]) {
 }
 
 void *connection(void *args) {
+    int i;
+    //setting up client
     struct clientData client;
     client.clientID =  *(int*)args;
+    for(i = 0; i < 10; i++){
+        strcpy(client.cart[i], "empty");
+    }
     printf("Connection Opened - ClientID: %d\n", client.clientID);
     char buffer[256];
     int comp;
@@ -167,9 +172,43 @@ void *cart(void *args) {
     client = (struct clientData*) args;
     char buffer[256];
     int comp;
-    int runFlag = 1;
 
     printf("Cart Entered - ClientID: %d\n", client->clientID);
+
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Here's your cart...");
+    int n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: cart 1");
+    }
+
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n"
+                "%s\n",
+                client->cart[0],
+                client->cart[1],
+                client->cart[2],
+                client->cart[3],
+                client->cart[4],
+                client->cart[5],
+                client->cart[6],
+                client->cart[7],
+                client->cart[8],
+                client->cart[9]);
+
+    n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: cart 2");
+    }
+
 
     printf("Cart Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
@@ -279,7 +318,7 @@ void *checkAccount(void *args) {
             sprintf(buffer, "Here's your account balance: %d\n", client->clientAccount);
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
-                error("ERROR writing to socket: account 3");
+                error("ERROR writing to socket: account 4");
             }
         }
     }

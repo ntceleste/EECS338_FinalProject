@@ -21,7 +21,7 @@ void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 void *addMoney(void *args); /* for admin use only, adds money to user accounts */
-void *checkAccount(void *args); /* returns the ammount of money in a clients account */
+void *checkAccount(void *args); /* returns the amount of money in a clients account */
 
 sem_t inventory;
 
@@ -86,8 +86,13 @@ int main(int argc, char *argv[]) {
 }
 
 void *connection(void *args) {
+    int i;
+    //setting up client
     struct clientData client;
     client.clientID =  *(int*)args;
+    for(i = 0; i < 10; i++){
+        strcpy(client.cart[i], "empty");
+    }
     printf("Connection Opened - ClientID: %d\n", client.clientID);
     char buffer[256];
     int comp;
@@ -171,6 +176,67 @@ void *cart(void *args) {
 
     printf("Cart Entered - ClientID: %d\n", client->clientID);
 
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Here's your cart...");
+    int n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: cart 1");
+    }
+
+    while(runFlag) {
+
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "What do you want to do with your cart?");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: cart 2");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: cart 1");
+        }
+        if (strcmp(buffer, "exit cart\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        } else if (strcmp(buffer, "check cart\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n",
+                    client->cart[0],
+                    client->cart[1],
+                    client->cart[2],
+                    client->cart[3],
+                    client->cart[4],
+                    client->cart[5],
+                    client->cart[6],
+                    client->cart[7],
+                    client->cart[8],
+                    client->cart[9]);
+
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 2");
+            }
+        } else if (strcmp(buffer, "remove\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "What do you want to remove?\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 4");
+            }
+        }
+    }
+
     printf("Cart Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
 }
@@ -241,9 +307,48 @@ void *checkAccount(void *args) {
     char buffer[256];
     int comp;
     int runFlag = 1;
-
     printf("Account Entered - ClientID: %d\n", client->clientID);
 
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Welcome to your account!");
+    int n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: account 1");
+    }
+
+    while(runFlag) {
+
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "What do you want to check?");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: account 1");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: account 1");
+        }
+        if (strcmp(buffer, "exit account\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        } else if (strcmp(buffer, "id\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Here's your ID: %d\n", client->clientID);
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: account 3");
+            }
+        } else if (strcmp(buffer, "balance\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Here's your account balance: %d\n", client->clientAccount);
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: account 4");
+            }
+        }
+    }
     printf("Account Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
 }
