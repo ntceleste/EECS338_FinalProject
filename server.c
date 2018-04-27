@@ -21,7 +21,7 @@ void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
 void *addMoney(void *args); /* for admin use only, adds money to user accounts */
-void *checkAccount(void *args); /* returns the ammount of money in a clients account */
+void *checkAccount(void *args); /* returns the amount of money in a clients account */
 
 sem_t inventory;
 
@@ -241,9 +241,48 @@ void *checkAccount(void *args) {
     char buffer[256];
     int comp;
     int runFlag = 1;
-
     printf("Account Entered - ClientID: %d\n", client->clientID);
 
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Welcome to your account!");
+    int n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: account 1");
+    }
+
+    while(runFlag) {
+
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "What do you want to check?");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: account 1");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: account 1");
+        }
+        if (strcmp(buffer, "exit account\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        } else if (strcmp(buffer, "id\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Here's your ID: %d\n", client->clientID);
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: account 3");
+            }
+        } else if (strcmp(buffer, "balance\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Here's your account balance: %d\n", client->clientAccount);
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: account 3");
+            }
+        }
+    }
     printf("Account Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
 }
