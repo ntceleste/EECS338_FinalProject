@@ -172,43 +172,99 @@ void *cart(void *args) {
     client = (struct clientData*) args;
     char buffer[256];
     int comp;
+    int runFlag = 1;
 
     printf("Cart Entered - ClientID: %d\n", client->clientID);
 
     bzero(buffer, sizeof(buffer));
-    sprintf(buffer, "Here's your cart...");
+    sprintf(buffer, "Welcome to your cart.");
     int n = write(client->clientID, buffer, sizeof(buffer));
     if (n < 0){
         error("ERROR writing to socket: cart 1");
     }
 
-    bzero(buffer, sizeof(buffer));
-    sprintf(buffer, "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n"
-                "%s\n",
-                client->cart[0],
-                client->cart[1],
-                client->cart[2],
-                client->cart[3],
-                client->cart[4],
-                client->cart[5],
-                client->cart[6],
-                client->cart[7],
-                client->cart[8],
-                client->cart[9]);
+    while(runFlag) {
 
-    n = write(client->clientID, buffer, sizeof(buffer));
-    if (n < 0){
-        error("ERROR writing to socket: cart 2");
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "What do you want to do with your cart?");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: cart 2");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: cart 1");
+        }
+        if (strcmp(buffer, "exit cart\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            runFlag = 0;
+        } else if (strcmp(buffer, "check cart\n") == 0) {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n"
+                            "%s\n",
+                    client->cart[0],
+                    client->cart[1],
+                    client->cart[2],
+                    client->cart[3],
+                    client->cart[4],
+                    client->cart[5],
+                    client->cart[6],
+                    client->cart[7],
+                    client->cart[8],
+                    client->cart[9]);
+
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 3");
+            }
+        } else if (strcmp(buffer, "remove\n") == 0) {
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Removing from cart.\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 4");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "What you like to remove?\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 5");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            n = read(client->clientID, buffer, sizeof(buffer));
+            if (n < 0) {
+                error("ERROR reading from socket: cart 2");
+            }
+
+            int i;
+            for(i = 0; i < 10; i++){
+                if(strcmp(strcat(client->cart[i], "\n"), buffer) == 0){
+                    strcpy(client->cart[i], "empty");
+                }
+            }
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "We've removed the requested Item.\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: cart 4");
+            }
+
+        }
     }
-
 
     printf("Cart Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
@@ -276,7 +332,7 @@ void *addMoney(void *args) {
 
 void *checkAccount(void *args) {
     struct clientData *client;
-    client = (struct clientData*) args;
+    client = (struct clientData *) args;
     char buffer[256];
     int comp;
     int runFlag = 1;
@@ -285,22 +341,22 @@ void *checkAccount(void *args) {
     bzero(buffer, sizeof(buffer));
     sprintf(buffer, "Welcome to your account!");
     int n = write(client->clientID, buffer, sizeof(buffer));
-    if (n < 0){
+    if (n < 0) {
         error("ERROR writing to socket: account 1");
     }
 
-    while(runFlag) {
+    while (runFlag) {
 
         bzero(buffer, sizeof(buffer));
         sprintf(buffer, "What do you want to check?");
         n = write(client->clientID, buffer, sizeof(buffer));
-        if (n < 0){
+        if (n < 0) {
             error("ERROR writing to socket: account 1");
         }
 
         bzero(buffer, sizeof(buffer));
         n = read(client->clientID, buffer, sizeof(buffer));
-        if (n < 0){
+        if (n < 0) {
             error("ERROR reading from socket: account 1");
         }
         if (strcmp(buffer, "exit account\n") == 0) {
@@ -310,14 +366,14 @@ void *checkAccount(void *args) {
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "Here's your ID: %d\n", client->clientID);
             n = write(client->clientID, buffer, sizeof(buffer));
-            if (n < 0){
+            if (n < 0) {
                 error("ERROR writing to socket: account 3");
             }
         } else if (strcmp(buffer, "balance\n") == 0) {
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "Here's your account balance: %d\n", client->clientAccount);
             n = write(client->clientID, buffer, sizeof(buffer));
-            if (n < 0){
+            if (n < 0) {
                 error("ERROR writing to socket: account 4");
             }
         }
