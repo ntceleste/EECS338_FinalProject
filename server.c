@@ -20,7 +20,6 @@ void *checkout(void *args); /* client checkout */
 void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
-void *addMoney(void *args); /* for admin use only, adds money to user accounts */
 void *checkAccount(void *args); /* returns the amount of money in a clients account */
 
 sem_t inventoryFlag;
@@ -346,15 +345,6 @@ void *shop(void *args) {
     //sem_post(&inventory);
     printf("Shop Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
-}
-
-
-//Should the only way to add money be to sell stuff? I think that makes sense, and simplifies life...
-void *addMoney(void *args) {
-    struct clientData *client;
-    client = (struct clientData*) args;
-    char buffer[256];
-    sprintf(buffer, "MONEY TEST");
 }
 
 void *checkAccount(void *args) {

@@ -1,0 +1,24 @@
+Last login: Fri Apr 27 14:49:13 on ttys001
+Nathaniels-MacBook-Pro:~ nate$ cd GitHub/EECS338_FinalProject/
+Nathaniels-MacBook-Pro:EECS338_FinalProject nate$ gcc -o server server.c
+Nathaniels-MacBook-Pro:EECS338_FinalProject nate$ ./server 1950
+I'm Listening
+Connection Opened - ClientID: 4
+Shop Entered - ClientID: 4
+Shop Exited - ClientID: 4
+Cart Entered - ClientID: 4
+Cart Exited - ClientID: 4
+Checkout Entered - ClientID: 4
+Checkout Exited - ClientID: 4
+Sell Entered - ClientID: 4
+Sell Exited - ClientID: 4
+Account Entered - ClientID: 4
+Account Exited - ClientID: 4
+Connection Closed - ClientID: 4
+^C
+Nathaniels-MacBook-Pro:EECS338_FinalProject nate$ 
+
+
+
+
+
