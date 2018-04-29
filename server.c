@@ -65,6 +65,11 @@ int main(int argc, char *argv[]) {
         storePrice[i] = 0;
     }
 
+    strcpy(storeInventory[1], "stuff");
+    storeStock[1] = 10;
+    storePrice[1] = 2;
+
+
     // Setup phase
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -223,16 +228,16 @@ void *cart(void *args) {
             runFlag = 0;
         } else if (strcmp(buffer, "check cart\n") == 0) {
             bzero(buffer, sizeof(buffer));
-            sprintf(buffer, "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n",
-                    client->cart[0],
-                    client->cart[1],
-                    client->cart[2],
-                    client->cart[3],
-                    client->cart[4]);
+            sprintf(buffer, "Item: %s, Quantity: %d\n"
+                            "Item: %s, Quantity: %d\n"
+                            "Item: %s, Quantity: %d\n"
+                            "Item: %s, Quantity: %d\n"
+                            "Item: %s, Quantity: %d\n",
+                    client->cart[0], client->cartStock[0],
+                    client->cart[1], client->cartStock[1],
+                    client->cart[2], client->cartStock[2],
+                    client->cart[3], client->cartStock[3],
+                    client->cart[4], client->cartStock[4]);
 
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
@@ -248,7 +253,7 @@ void *cart(void *args) {
             }
 
             bzero(buffer, sizeof(buffer));
-            sprintf(buffer, "What you like to remove?\n");
+            sprintf(buffer, "What item would you like to remove?\n");
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
                 error("ERROR writing to socket: cart 5");
@@ -261,11 +266,25 @@ void *cart(void *args) {
             }
 
             int i;
+            int itemKey;
+            char tempCart[5][50];
+
             for(i = 0; i < 5; i++){
-                if(strcmp(strcat(client->cart[i], "\n"), buffer) == 0){
-                    strcpy(client->cart[i], "empty");
+                strcat(tempCart[i], client->cart[i]);
+                if(strcmp(strcat(tempCart[i], "\n"), buffer) == 0){
+                    itemKey = i;
                 }
             }
+
+
+            for(i = 0; i < 10; i++){
+                if(strcmp(client->cart[itemKey], storeInventory[i]) == 0){
+                    storeStock[i] = storeStock[i] + client->cartStock[itemKey];
+                }
+            }
+
+            strcpy(client->cart[itemKey], "empty");
+            client->cartStock[itemKey] = 0;
 
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "We've removed the requested Item.\n");
@@ -274,6 +293,13 @@ void *cart(void *args) {
                 error("ERROR writing to socket: cart 4");
             }
 
+        } else {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "please enter a valid command.\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: Shop 3");
+            }
         }
     }
 
@@ -315,7 +341,7 @@ void *shop(void *args) {
     while(runFlag) {
 
         bzero(buffer, sizeof(buffer));
-        sprintf(buffer, "What do you want to do?");
+        sprintf(buffer, "What do you want to do in the shop?");
         n = write(client->clientID, buffer, sizeof(buffer));
         if (n < 0){
             error("ERROR writing to socket: Shop 2");
@@ -359,7 +385,7 @@ void *shop(void *args) {
         } else if (strcmp(buffer, "add to cart\n") == 0){
 
             bzero(buffer, sizeof(buffer));
-            sprintf(buffer, "Entering buy sequence");
+            sprintf(buffer, "Entering cart addition sequence");
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0) {
                 error("ERROR writing to socket: shop 3");
@@ -383,14 +409,11 @@ void *shop(void *args) {
             char tempInventory[10][50];
             for(i = 0; i < 10; i++){
                 strcat(tempInventory[i], storeInventory[i]);
-            }
-
-
-            for(i = 0; i < 10; i++){
                 if(strcmp(strcat(tempInventory[i], "\n"), buffer) == 0){
                     itemKey = i;
                 }
             }
+
 
             if(itemKey == -1){
                 bzero(buffer, sizeof(buffer));
@@ -431,6 +454,17 @@ void *shop(void *args) {
                         error("ERROR writing to socket: shop 8");
                     }
                 } else {
+
+                    int addedFlag = -1;
+                    for(i = 0; i < 5; i++){
+                        if(strcmp(client->cart[i], "empty") == 0){
+                            strcpy(client->cart[i], storeInventory[itemKey]);
+                            client->cartStock[i] = amount;
+                            storeStock[itemKey] = storeStock[itemKey] - amount;
+                            break;
+                        }
+                    }
+
                     bzero(buffer, sizeof(buffer));
                     sprintf(buffer, "%d of %s have been added to your cart.", amount, storeInventory[itemKey]);
                     n = write(client->clientID, buffer, sizeof(buffer));
