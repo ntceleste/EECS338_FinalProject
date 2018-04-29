@@ -39,8 +39,9 @@ int storeAccount = 9999; /* Keeps track of the stores money */
 struct clientData {
     int clientID; /* keeps track of the clients login ID, this is unique to each client connection */
     char cart[5][50]; /* holds the items added to the clients cart  */
-    int clientAccount; /* holds the ammount of money in the clients cart */
+    int clientAccount; /* holds the amount of money in the clients cart */
     int cartStock[5];
+    int cartPrice[5];
 };
 
 int main(int argc, char *argv[]) {
@@ -186,8 +187,107 @@ void *checkout(void *args) {
     char buffer[1028];
     int comp;
     int runFlag = 1;
+    int i;
 
     printf("Checkout Entered - ClientID: %d\n", client->clientID);
+
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Welcome to checkout.");
+    int n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: checkout 1");
+    }
+
+    bzero(buffer, sizeof(buffer));
+    sprintf(buffer, "Are you ready to checkout?");
+    n = write(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR writing to socket: checkout 2");
+    }
+
+    bzero(buffer, sizeof(buffer));
+    n = read(client->clientID, buffer, sizeof(buffer));
+    if (n < 0){
+        error("ERROR reading from socket: checkout 1");
+    }
+
+    if (strcmp(buffer, "yes\n") != 0) {
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "We're sorry.");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: checkout 3");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        sprintf(buffer, "please come back when you are ready to checkout.");
+        n = write(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR writing to socket: checkout 4");
+        }
+
+        bzero(buffer, sizeof(buffer));
+        n = read(client->clientID, buffer, sizeof(buffer));
+        if (n < 0){
+            error("ERROR reading from socket: checkout 1");
+        }
+    } else {
+        int totalCartPrice;
+        for (i = 0; i < 5; i++){
+            totalCartPrice = totalCartPrice + (client->cartPrice[i] * client->cartStock[i]);
+        }
+
+        if (totalCartPrice > client->clientAccount){
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "You have insufficient to complete this purchase");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: checkout 5");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "please remove items or sell items");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: checkout 6");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            n = read(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR reading from socket: checkout 1");
+            }
+        } else {
+            for(i = 0; i < 5; i ++){
+                if(strcmp(client->cart[i], "empty") != 0){
+                    strcpy(client->cart[i], "empty");
+                    client->cartStock[i] = 0;
+                    client->cartPrice[i] = 0;
+                }
+            }
+            client->clientAccount = client->clientAccount - totalCartPrice;
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Purchase successfull");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: checkout 6");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "Your items will be shipped out shortly");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: checkout 6");
+            }
+
+            bzero(buffer, sizeof(buffer));
+            n = read(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR reading from socket: checkout 1");
+            }
+        }
+    }
 
     printf("Checkout Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
@@ -460,6 +560,7 @@ void *shop(void *args) {
                         if(strcmp(client->cart[i], "empty") == 0){
                             strcpy(client->cart[i], storeInventory[itemKey]);
                             client->cartStock[i] = amount;
+                            client->cartPrice[i] = storePrice[itemKey];
                             storeStock[itemKey] = storeStock[itemKey] - amount;
                             break;
                         }
@@ -534,6 +635,13 @@ void *checkAccount(void *args) {
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0) {
                 error("ERROR writing to socket: account 4");
+            }
+        } else {
+            bzero(buffer, sizeof(buffer));
+            sprintf(buffer, "please enter a valid command.\n");
+            n = write(client->clientID, buffer, sizeof(buffer));
+            if (n < 0){
+                error("ERROR writing to socket: Shop 3");
             }
         }
     }
