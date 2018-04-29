@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
         error("ERROR connecting");
 
     int runFlag = 1;
-    char buffer[256];
+    char buffer[1028];
     while(runFlag){
         bzero(buffer, sizeof(buffer));
         int n = read(sockfd, buffer, sizeof(buffer));

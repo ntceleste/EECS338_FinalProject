@@ -20,10 +20,9 @@ void *checkout(void *args); /* client checkout */
 void *sell(void *args); /* client sells */
 void *shop(void *args); /* client shops stores inventory */
 void *cart(void *args); /* client checks their cart */
-void *addMoney(void *args); /* for admin use only, adds money to user accounts */
 void *checkAccount(void *args); /* returns the amount of money in a clients account */
 
-sem_t inventory;
+sem_t inventoryFlag;
 
 // Helper function to conveniently print to stderr AND exit (terminate)
 void error(const char *msg) {
@@ -31,14 +30,15 @@ void error(const char *msg) {
     exit(1);
 }
 
-char storeInventory[50][50]; /* keep s the storefront's inventory */
-int storeStock[50]; /* matches the items above and keeps track of item stock numbers */
-int storePrice[50]; /* matches the items above and keeps track of the item prices */
+char storeInventory[10][50]; /* keep s the storefront's inventory */
+int storeStock[10]; /* matches the items above and keeps track of item stock numbers */
+int storePrice[10]; /* matches the items above and keeps track of the item prices */
+//do we really care?
 int storeAccount = 9999; /* Keeps track of the stores money */
 
 struct clientData {
     int clientID; /* keeps track of the clients login ID, this is unique to each client connection */
-    char cart[10][50]; /* holds the items added to the clients cart  */
+    char cart[5][50]; /* holds the items added to the clients cart  */
     int clientAccount; /* holds the ammount of money in the clients cart */
 };
 
@@ -48,6 +48,20 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "ERROR, no port provided\n");
         exit(1);
+    }
+
+    //set up semaphore
+    /*if(sem_init(&inventory, 0, 1) < 0) { // 0 = multithreaded
+        fprintf(stderr, "ERROR: could not initialize &inventory.\n");
+        return -1;
+    } */
+
+    //set up inventory to be empty
+    int i;
+    for(i = 0; i < 10; i++){
+        strcpy(storeInventory[i], "empty");
+        storeStock[i] = 0;
+        storePrice[i] = 0;
     }
 
     // Setup phase
@@ -90,11 +104,11 @@ void *connection(void *args) {
     //setting up client
     struct clientData client;
     client.clientID =  *(int*)args;
-    for(i = 0; i < 10; i++){
+    for(i = 0; i < 5; i++){
         strcpy(client.cart[i], "empty");
     }
     printf("Connection Opened - ClientID: %d\n", client.clientID);
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
     while(runFlag) {
@@ -117,30 +131,35 @@ void *connection(void *args) {
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, shop, &client);
             pthread_join(tid, NULL);
+            bzero(buffer, sizeof(buffer));
         } else if (strcmp(buffer, "sell\n") == 0) {
             pthread_t tid; /* the thread identifiers */
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, sell, &client);
             pthread_join(tid, NULL);
+            bzero(buffer, sizeof(buffer));
         } else if (strcmp(buffer, "cart\n") == 0) {
             pthread_t tid; /* the thread identifiers */
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, cart, &client);
             pthread_join(tid, NULL);
+            bzero(buffer, sizeof(buffer));
         } else if (strcmp(buffer, "checkout\n") == 0) {
             pthread_t tid; /* the thread identifiers */
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, checkout, &client);
             pthread_join(tid, NULL);
+            bzero(buffer, sizeof(buffer));
         } else if (strcmp(buffer, "check account\n") == 0) {
             pthread_t tid; /* the thread identifiers */
             pthread_attr_t attr;
             pthread_attr_init(&attr);
             pthread_create(&tid, &attr, checkAccount, &client);
             pthread_join(tid, NULL);
+            bzero(buffer, sizeof(buffer));
         } else {
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "please enter a valid command.\n");
@@ -157,7 +176,7 @@ void *connection(void *args) {
 void *checkout(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
 
@@ -170,7 +189,7 @@ void *checkout(void *args) {
 void *cart(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
 
@@ -206,22 +225,12 @@ void *cart(void *args) {
                             "%s\n"
                             "%s\n"
                             "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
-                            "%s\n"
                             "%s\n",
                     client->cart[0],
                     client->cart[1],
                     client->cart[2],
                     client->cart[3],
-                    client->cart[4],
-                    client->cart[5],
-                    client->cart[6],
-                    client->cart[7],
-                    client->cart[8],
-                    client->cart[9]);
+                    client->cart[4]);
 
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
@@ -273,7 +282,7 @@ void *cart(void *args) {
 void *sell(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
 
@@ -286,14 +295,37 @@ void *sell(void *args) {
 void *shop(void *args) {
     struct clientData *client;
     client = (struct clientData*) args;
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
+
+
+    //sem_wait(&inventory);
 
     printf("Shop Entered - ClientID: %d\n", client->clientID);
     while(runFlag) {
         bzero(buffer, sizeof(buffer));
-        sprintf(buffer, "INVENTORY");
+        sprintf(buffer, "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n"
+                        "Item: %s, Price: $%d, Quantity: %d\n",
+                storeInventory[0], storePrice[0], storeStock[0],
+                storeInventory[1], storePrice[1], storeStock[1],
+                storeInventory[2], storePrice[2], storeStock[2],
+                storeInventory[3], storePrice[3], storeStock[3],
+                storeInventory[4], storePrice[4], storeStock[4],
+                storeInventory[5], storePrice[5], storeStock[5],
+                storeInventory[6], storePrice[6], storeStock[6],
+                storeInventory[7], storePrice[7], storeStock[7],
+                storeInventory[8], storePrice[8], storeStock[8],
+                storeInventory[9], storePrice[9], storeStock[9]);
+
         int n = write(client->clientID, buffer, sizeof(buffer));
         if (n < 0){
             error("ERROR writing to socket: Shop 1");
@@ -317,23 +349,16 @@ void *shop(void *args) {
         }
 
     }
+
+    //sem_post(&inventory);
     printf("Shop Exited - ClientID: %d\n", client->clientID);
     pthread_exit(0);
-}
-
-
-//Should the only way to add money be to sell stuff? I think that makes sense, and simplifies life...
-void *addMoney(void *args) {
-    struct clientData *client;
-    client = (struct clientData*) args;
-    char buffer[256];
-    sprintf(buffer, "MONEY TEST");
 }
 
 void *checkAccount(void *args) {
     struct clientData *client;
     client = (struct clientData *) args;
-    char buffer[256];
+    char buffer[1028];
     int comp;
     int runFlag = 1;
     printf("Account Entered - ClientID: %d\n", client->clientID);
