@@ -66,10 +66,6 @@ int main(int argc, char *argv[]) {
         storePrice[i] = 0;
     }
 
-    strcpy(storeInventory[1], "stuff");
-    storeStock[1] = 10;
-    storePrice[1] = 2;
-
 
     // Setup phase
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -113,6 +109,8 @@ void *connection(void *args) {
     client.clientID =  *(int*)args;
     for(i = 0; i < 5; i++){
         strcpy(client.cart[i], "empty");
+        client.cartPrice[i] = 0;
+        client.cartStock[i] = 0;
     }
 
     printf("Connection Opened - ClientID: %d\n", client.clientID);
