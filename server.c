@@ -114,7 +114,7 @@ void *connection(void *args) {
     for(i = 0; i < 5; i++){
         strcpy(client.cart[i], "empty");
     }
-    client.clientAccount = 100;
+
     printf("Connection Opened - ClientID: %d\n", client.clientID);
     char buffer[1028];
     int comp;
@@ -480,6 +480,8 @@ void *sell(void *args) {
                     error("ERROR reading from socket: account 1");
                 }
 
+
+                buffer[strlen(buffer) - 1] = 0;
                 strcpy(storeInventory[openSlot], buffer);
 
                 bzero(buffer, sizeof(buffer));
