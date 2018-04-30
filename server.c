@@ -640,7 +640,7 @@ void *shop(void *args) {
             int itemKey = -1;
             char tempInventory[10][50];
             for(i = 0; i < 10; i++){
-                strcat(tempInventory[i], storeInventory[i]);
+                strcpy(tempInventory[i], storeInventory[i]);
                 if(strcmp(strcat(tempInventory[i], "\n"), buffer) == 0){
                     itemKey = i;
                 }
