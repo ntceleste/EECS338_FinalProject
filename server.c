@@ -52,6 +52,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    sem_init(&inventoryFlag, 0, 1); //sets up semaphore 
+
     //set up semaphore
     /*if(sem_init(&inventory, 0, 1) < 0) { // 0 = multithreaded
         fprintf(stderr, "ERROR: could not initialize &inventory.\n");
