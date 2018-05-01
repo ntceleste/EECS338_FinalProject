@@ -61,9 +61,11 @@ int main(int argc, char *argv[]) {
     //set up inventory to be empty
     int i;
     for(i = 0; i < 10; i++){
+        sem_wait(&inventoryFlag);
         strcpy(storeInventory[i], "empty");
         storeStock[i] = 0;
         storePrice[i] = 0;
+        sem_post(&inventoryFlag);
     }
 
 
@@ -376,9 +378,11 @@ void *cart(void *args) {
 
 
             for(i = 0; i < 10; i++){
+                sem_wait(&inventoryFlag);
                 if(strcmp(client->cart[itemKey], storeInventory[i]) == 0){
                     storeStock[i] = storeStock[i] + client->cartStock[itemKey];
                 }
+                sem_post(&inventoryFlag);
             }
 
             strcpy(client->cart[itemKey], "empty");
@@ -444,10 +448,12 @@ void *sell(void *args) {
             int openSlot = -1;
 
             for(i = 0; i < 10; i ++){
+                sem_wait(&inventoryFlag);
                 if(strcmp(storeInventory[i], "empty") == 0){
                     openSlot = i;
                     break;
                 }
+                sem_post(&inventoryFlag);
             }
 
             if(openSlot == -1){
@@ -480,7 +486,9 @@ void *sell(void *args) {
 
 
                 buffer[strlen(buffer) - 1] = 0;
+                sem_wait(&inventoryFlag);
                 strcpy(storeInventory[openSlot], buffer);
+                sem_post(&inventoryFlag);
 
                 bzero(buffer, sizeof(buffer));
                 sprintf(buffer, "Added item to the iventory");
@@ -588,6 +596,7 @@ void *shop(void *args) {
             bzero(buffer, sizeof(buffer));
             runFlag = 0;
         } else if ( strcmp(buffer, "view inventory\n") == 0) {
+            sem_wait(&inventoryFlag);
             bzero(buffer, sizeof(buffer));
             sprintf(buffer, "Item: %s, Price: $%d, Quantity: %d\n"
                             "Item: %s, Price: $%d, Quantity: %d\n"
@@ -609,6 +618,7 @@ void *shop(void *args) {
                     storeInventory[7], storePrice[7], storeStock[7],
                     storeInventory[8], storePrice[8], storeStock[8],
                     storeInventory[9], storePrice[9], storeStock[9]);
+            sem_post(&inventoryFlag);
 
             n = write(client->clientID, buffer, sizeof(buffer));
             if (n < 0){
@@ -640,10 +650,12 @@ void *shop(void *args) {
             int itemKey = -1;
             char tempInventory[10][50];
             for(i = 0; i < 10; i++){
+              sem_wait(&inventoryFlag);
                 strcpy(tempInventory[i], storeInventory[i]);
                 if(strcmp(strcat(tempInventory[i], "\n"), buffer) == 0){
                     itemKey = i;
                 }
+                sem_post(&inventoryFlag);
             }
 
 
@@ -656,14 +668,18 @@ void *shop(void *args) {
                 }
             } else {
                 bzero(buffer, sizeof(buffer));
+                sem_wait(&inventoryFlag);
                 sprintf(buffer, "You have selected %s.", storeInventory[itemKey]);
+                sem_post(&inventoryFlag);
                 n = write(client->clientID, buffer, sizeof(buffer));
                 if (n < 0) {
                     error("ERROR writing to socket: shop 6");
                 }
 
                 bzero(buffer, sizeof(buffer));
+                sem_wait(&inventoryFlag);
                 sprintf(buffer, "how many of %s would you like to add to your cart?", storeInventory[itemKey]);
+                sem_post(&inventoryFlag);
                 n = write(client->clientID, buffer, sizeof(buffer));
                 if (n < 0) {
                     error("ERROR writing to socket: shop 7");
@@ -690,7 +706,9 @@ void *shop(void *args) {
                     int addedFlag = -1;
                     for(i = 0; i < 5; i++){
                         if(strcmp(client->cart[i], "empty") == 0){
+                            sem_wait(&inventoryFlag);
                             strcpy(client->cart[i], storeInventory[itemKey]);
+                            sem_post(&inventoryFlag);
                             client->cartStock[i] = amount;
                             client->cartPrice[i] = storePrice[itemKey];
                             storeStock[itemKey] = storeStock[itemKey] - amount;
@@ -701,7 +719,9 @@ void *shop(void *args) {
 
                     if(addedFlag == 1){
                         bzero(buffer, sizeof(buffer));
+                        sem_wait(&inventoryFlag);
                         sprintf(buffer, "%d of %s have been added to your cart.", amount, storeInventory[itemKey]);
+                        sem_post(&inventoryFlag);
                         n = write(client->clientID, buffer, sizeof(buffer));
                         if (n < 0) {
                             error("ERROR writing to socket: shop 8");
