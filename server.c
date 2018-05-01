@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    sem_init(&inventoryFlag, 0, 1); //sets up semaphore 
+    sem_init(&inventoryFlag, 0, 1); //sets up semaphore
 
     //set up semaphore
     /*if(sem_init(&inventory, 0, 1) < 0) { // 0 = multithreaded
@@ -65,9 +65,10 @@ int main(int argc, char *argv[]) {
     for(i = 0; i < 10; i++){
         sem_wait(&inventoryFlag);
         strcpy(storeInventory[i], "empty");
+        sem_post(&inventoryFlag);
         storeStock[i] = 0;
         storePrice[i] = 0;
-        sem_post(&inventoryFlag);
+
     }
 
 
@@ -453,6 +454,7 @@ void *sell(void *args) {
                 sem_wait(&inventoryFlag);
                 if(strcmp(storeInventory[i], "empty") == 0){
                     openSlot = i;
+                    sem_post(&inventoryFlag);
                     break;
                 }
                 sem_post(&inventoryFlag);
@@ -657,7 +659,7 @@ void *shop(void *args) {
                 if(strcmp(strcat(tempInventory[i], "\n"), buffer) == 0){
                     itemKey = i;
                 }
-                sem_post(&inventoryFlag);
+              sem_post(&inventoryFlag);
             }
 
 
